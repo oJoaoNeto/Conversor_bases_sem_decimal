@@ -94,7 +94,7 @@ def _convert_integer_part_horner(
         )
 
         # Multiplica o acumulador atual por source_base na base de destino
-        # via soma repetida / double-and-add (aritmética na base target_base)
+        # via soma repetida (aritmética na base target_base)
         acc_scaled = scalar_multiply(acc, source_base)
 
         # Adiciona o dígito atual

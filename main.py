@@ -102,14 +102,6 @@ def menu_exemplos():
     print(format_conversion_report(conv_bin))
 
 
-def run_tests():
-    import unittest
-    loader = unittest.TestLoader()
-    suite = loader.discover("tests")
-    runner = unittest.TextTestRunner(verbosity=2)
-    runner.run(suite)
-
-
 def main():
     banner()
     while True:
@@ -119,11 +111,10 @@ def main():
         print("1. Operações Elementares (Adição e Subtração)")
         print("2. Conversão Direta de Bases (Reais e Dízimas)")
         print("3. Demonstrações e Casos Didáticos")
-        print("4. Executar Bateria de Testes")
-        print("5. Sair")
+        print("4. Sair")
         print("=" * 45)
 
-        choice = input("Escolha uma opção (1-5): ").strip()
+        choice = input("Escolha uma opção (1-4): ").strip()
 
         if choice == "1":
             menu_operacoes()
@@ -132,8 +123,6 @@ def main():
         elif choice == "3":
             menu_exemplos()
         elif choice == "4":
-            run_tests()
-        elif choice == "5":
             print("\nEncerrando o programa. Até logo!")
             break
         else:

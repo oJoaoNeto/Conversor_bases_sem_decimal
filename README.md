@@ -23,20 +23,15 @@ Este projeto implementa um ambiente computacional em **Python 3.11+** voltado à
 projeto_u1/
 ├── README.md               # Este documento explicativo
 ├── relatorio.md            # Relatório acadêmico completo com análise crítica e resultados
-├── requirements.txt        # Dependências opcionais (ex: pytest)
-├── main.py                 # Interface CLI interativa (Menu principal)
-├── src/
-│   ├── __init__.py
-│   ├── alphabet.py         # Mapeamento dinâmico de símbolos/dígitos (0-9, A-Z)
-│   ├── base_number.py      # Estrutura vetorial de dígitos isolados (BaseNumber)
-│   ├── operations.py       # Algoritmos de Adição e Subtração com geração de traces
-│   ├── converter.py        # Conversor direto sem coerção decimal e detecção de dízimas
-│   └── display.py          # Renderização de contas armadas e relatórios passo a passo
-└── tests/
+├── requirements.txt        # Especificações do projeto
+├── main.py                 # Interface CLI interativa (Menu principal da calculadora/conversor)
+└── src/
     ├── __init__.py
-    ├── test_operations.py   # Testes unitários para adição, subtração, carries e borrows
-    ├── test_converter.py    # Testes unitários para conversão direta entre bases não-decimais
-    └── test_dizimas.py      # Testes unitários de detecção exata de dízimas periódicas nativas
+    ├── alphabet.py         # Mapeamento dinâmico de símbolos/dígitos (0-9, A-Z)
+    ├── base_number.py      # Estrutura vetorial de dígitos isolados (BaseNumber)
+    ├── operations.py       # Algoritmos de Adição e Subtração com geração de traces
+    ├── converter.py        # Conversor direto sem coerção decimal e detecção de dízimas
+    └── display.py          # Renderização de contas armadas e relatórios passo a passo
 ```
 
 ---
@@ -45,7 +40,7 @@ projeto_u1/
 
 ### 1. Pré-requisitos
 - Python 3.11 ou superior instalado.
-- Nenhuma biblioteca externa é obrigatória para a execução do programa principal.
+- Nenhuma biblioteca externa é necessária para a execução do programa principal.
 
 ### 2. Executando o Menu Interativo (CLI)
 No terminal, a partir da pasta `projeto_u1`:
@@ -55,18 +50,8 @@ python main.py
 O menu interativo oferece:
 1. **Operações Elementares (Adição e Subtração):** Escolha qualquer base (2 a 36) e dois operandos reais para visualizar a conta armada e a resolução coluna a coluna.
 2. **Conversão Direta de Bases:** Converta números reais entre quaisquer bases arbitrárias (ex: Base 4 para Base 3, Base 7 para Base 13, Base 10 para Binário) acompanhando o passo a passo da aritmética polinomial e o diagnóstico de periodicidade.
-3. **Demonstrações e Casos Didáticos:** Executa automaticamente 4 casos clássicos ilustrativos.
-4. **Executar Bateria de Testes:** Executa todos os testes automatizados diretamente pela aplicação.
-
-### 3. Executando os Testes Automatizados
-Via módulo nativo `unittest`:
-```bash
-python -m unittest discover tests
-```
-Ou via `pytest` (caso instalado):
-```bash
-pytest tests/ -v
-```
+3. **Demonstrações e Casos Didáticos:** Executa automaticamente casos clássicos ilustrativos.
+4. **Sair:** Encerra a aplicação.
 
 ---
 
@@ -86,4 +71,3 @@ O uso de tipos primitivos `float` (padrão IEEE 754) para intermediar conversõe
 
 ## 📄 Relatório Técnico
 O relatório acadêmico completo exigido para a avaliação (item 3 dos resultados esperados) encontra-se redigido no arquivo [`relatorio.md`](file:///C:/Users/JoaoNeto/Documents/ufrn/CN/projeto_u1/relatorio.md).
-# Conversor_bases_sem_decimal

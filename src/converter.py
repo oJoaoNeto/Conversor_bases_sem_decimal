@@ -1,11 +1,12 @@
 """
-Módulo de Conversão Direta entre Bases Arbitrárias.
-Utiliza aritmética polinomial calculada estritamente na base de origem ou de destino,
+Módulo de Conversão entre Bases Arbitrárias.
+Utiliza aritmética polinomial calculada na base de origem ou de destino,
 sem coerção para a base decimal ou para tipos primitivos float do IEEE 754.
 Detecta dízimas periódicas nativas a partir do histórico de restos fracionários.
 """
 
 from typing import Dict, List, Optional, Tuple
+from src.alphabet import value_to_char, validate_base
 from src.base_number import BaseNumber
 from src.operations import add, scalar_multiply
 
@@ -46,7 +47,7 @@ def _int_value_of_digits(digits: List[int], base: int) -> int:
 
 
 def _convert_integer_part_horner(
-    int_digits: List[int], source_base: int, target_base: int, alphabet
+    int_digits: List[int], source_base: int, target_base: int
 ) -> Tuple[List[int], List[str]]:
     """
     Converte a parte inteira usando o Algoritmo de Horner calculado na base de destino.
@@ -55,7 +56,12 @@ def _convert_integer_part_horner(
     """
     steps = []
     # Acumulador P = 0 na base de destino
-    acc = BaseNumber(base=target_base, sign=1, integer_digits=[0], fractional_digits=[], alphabet=alphabet)
+    acc = BaseNumber(
+        base=target_base,
+        sign=1,
+        integer_digits=[0],
+        fractional_digits=[],
+    )
 
     steps.append(
         f"Inicialização do acumulador na base de destino ({target_base}): P = {acc.to_string()}"
@@ -79,17 +85,16 @@ def _convert_integer_part_horner(
             sign=1,
             integer_digits=d_target_digits,
             fractional_digits=[],
-            alphabet=alphabet,
         )
 
-        char_orig = alphabet.value_to_char(d_orig, source_base)
+        char_orig = value_to_char(d_orig, source_base)
         step_str = (
             f"Passo {idx + 1} (dígito de peso {source_base}^{pos} = '{char_orig}' [valor {d_orig}]): "
             f"P = (P * {source_base}) + {d_num.to_string()}"
         )
 
         # Multiplica o acumulador atual por source_base na base de destino
-        # via soma repetida / double-and-add (aritmética estrita na base target_base)
+        # via soma repetida / double-and-add (aritmética na base target_base)
         acc_scaled = scalar_multiply(acc, source_base)
 
         # Adiciona o dígito atual
@@ -105,12 +110,11 @@ def _convert_fractional_part(
     frac_digits: List[int],
     source_base: int,
     target_base: int,
-    alphabet,
     max_digits: int = 50,
 ) -> Tuple[List[int], Optional[int], bool, List[str]]:
     """
     Converte a parte fracionária utilizando multiplicações sucessivas por target_base
-    executadas estritamente na base de origem.
+    executadas na base de origem.
     Rastreia o histórico de estados fracionários para detectar dízimas periódicas nativas.
     """
     steps = []
@@ -123,7 +127,6 @@ def _convert_fractional_part(
         sign=1,
         integer_digits=[0],
         fractional_digits=list(frac_digits),
-        alphabet=alphabet,
     )
     current_frac.normalize()
 
@@ -141,20 +144,20 @@ def _convert_fractional_part(
     while iteration < max_digits:
         frac_tuple = tuple(current_frac.fractional_digits)
 
-        # 1. Se a fração zerou, a representação é exata e finita!
+        # 1. Se a fração zerou, a representação é exata e finita
         if not frac_tuple or all(d == 0 for d in frac_tuple):
             steps.append(
                 f"Passo {iteration + 1}: Resto fracionário zerou. Representação finita e exata na base {target_base}."
             )
             break
 
-        # 2. Se a fração já foi vista anteriormente, detectamos um ciclo perfeito (dízima periódica nativa)
+        # 2. Se a fração já foi vista anteriormente, detectamos um ciclo perfeito (dízima periódica)
         if frac_tuple in history:
             repeating_start = history[frac_tuple]
             is_periodic = True
             period_len = len(target_digits) - repeating_start
             period_syms = "".join(
-                alphabet.value_to_char(target_digits[k], target_base)
+                value_to_char(target_digits[k], target_base)
                 for k in range(repeating_start, len(target_digits))
             )
             steps.append(
@@ -176,7 +179,7 @@ def _convert_fractional_part(
             )
 
         target_digits.append(overflow_val)
-        target_char = alphabet.value_to_char(overflow_val, target_base)
+        target_char = value_to_char(overflow_val, target_base)
 
         # Nova fração restante na base de origem
         current_frac = BaseNumber(
@@ -184,11 +187,12 @@ def _convert_fractional_part(
             sign=1,
             integer_digits=[0],
             fractional_digits=product.fractional_digits,
-            alphabet=alphabet,
         )
         current_frac.normalize()
 
-        frac_str = "".join(alphabet.value_to_char(d, source_base) for d in current_frac.fractional_digits)
+        frac_str = "".join(
+            value_to_char(d, source_base) for d in current_frac.fractional_digits
+        )
         steps.append(
             f"Passo {iteration + 1}: Fração atual * {target_base} = {product.to_string()} (base {source_base}) "
             f"-> Dígito extraído: '{target_char}' (valor {overflow_val}), Nova fração restante: 0.{frac_str or '0'}"
@@ -214,16 +218,18 @@ def convert(
     - Parte inteira convertida via Horner na base de destino.
     - Parte fracionária convertida via multiplicações sucessivas na base de origem.
     - Sem coerção decimal ou binária intermediária.
-    - Detecção exata de dízimas periódicas.
+    - Detecção de dízimas periódicas.
     """
-    number.alphabet.validate_base(target_base)
+    validate_base(target_base)
 
     if number.base == target_base:
         return ConversionResult(
             source_number=number,
             target_base=target_base,
             result_number=number.copy(),
-            integer_steps=["Bases de origem e destino idênticas; nenhuma conversão necessária."],
+            integer_steps=[
+                "Bases de origem e destino idênticas; nenhuma conversão necessária."
+            ],
             fractional_steps=[],
             is_periodic=number.repeating_start is not None,
             period_start=number.repeating_start,
@@ -236,7 +242,7 @@ def convert(
 
     # 1. Conversão da parte inteira
     int_digits_res, int_steps = _convert_integer_part_horner(
-        number.integer_digits, number.base, target_base, number.alphabet
+        number.integer_digits, number.base, target_base
     )
 
     # 2. Conversão da parte fracionária
@@ -244,7 +250,6 @@ def convert(
         number.fractional_digits,
         number.base,
         target_base,
-        number.alphabet,
         max_digits=max_fraction_digits,
     )
 
@@ -254,7 +259,6 @@ def convert(
         integer_digits=int_digits_res,
         fractional_digits=frac_digits_res,
         repeating_start=rep_start,
-        alphabet=number.alphabet,
     )
 
     period_len = None

@@ -1,32 +1,37 @@
 """
 Módulo de Visualização e Renderização em Terminal.
-Responsável por formatar contas armadas de Adição e Subtração,
+Responsável por formatar contas de Adição e Subtração,
 com exibição de vai-um (carry) e empresta-um (borrow),
 além de formatar o passo a passo da conversão direta de bases.
 """
 
-from typing import List
+from src.alphabet import value_to_char
 from src.operations import AdditionTrace, SubtractionTrace
 from src.converter import ConversionResult
 
 
 def format_addition_conta_armada(trace: AdditionTrace) -> str:
-    """Formata visualmente a conta armada da adição com alinhamento e linha de vai-um."""
+    """Formata visualmente a conta da adição com alinhamento e linha de vai-um."""
     base = trace.operand_a.base
-    alpha = trace.operand_a.alphabet
 
-    a_int_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_a_int)
-    b_int_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_b_int)
+    a_int_str = "".join(value_to_char(d, base) for d in trace.aligned_a_int)
+    b_int_str = "".join(value_to_char(d, base) for d in trace.aligned_b_int)
 
     has_frac = len(trace.aligned_a_frac) > 0
-    a_frac_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_a_frac) if has_frac else ""
-    b_frac_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_b_frac) if has_frac else ""
+    a_frac_str = (
+        "".join(value_to_char(d, base) for d in trace.aligned_a_frac)
+        if has_frac
+        else ""
+    )
+    b_frac_str = (
+        "".join(value_to_char(d, base) for d in trace.aligned_b_frac)
+        if has_frac
+        else ""
+    )
 
     # Linha de vai-um (carries)
-    # Alinha carries_int e carries_frac
     carries_int_syms = [
-        str(c) if c > 0 else " "
-        for c in trace.carries_int[-len(trace.aligned_a_int) :]
+        str(c) if c > 0 else " " for c in trace.carries_int[-len(trace.aligned_a_int) :]
     ]
     carries_frac_syms = [str(c) if c > 0 else " " for c in trace.carries_frac]
 
@@ -38,7 +43,9 @@ def format_addition_conta_armada(trace: AdditionTrace) -> str:
     carry_display = f"{carry_int_str} {carry_frac_str}" if has_frac else carry_int_str
 
     res_display = trace.result.to_string()
-    width = max(len(op_a_display), len(op_b_display), len(res_display), len(carry_display), 8)
+    width = max(
+        len(op_a_display), len(op_b_display), len(res_display), len(carry_display), 8
+    )
 
     lines = [
         f"--- CONTA ARMADA (ADIÇÃO NA BASE {base}) ---",
@@ -57,16 +64,23 @@ def format_addition_conta_armada(trace: AdditionTrace) -> str:
 
 
 def format_subtraction_conta_armada(trace: SubtractionTrace) -> str:
-    """Formata visualmente a conta armada da subtração com alinhamento e linha de empréstimo."""
+    """Formata visualmente a conta da subtração com alinhamento e linha de empréstimo."""
     base = trace.operand_a.base
-    alpha = trace.operand_a.alphabet
 
-    a_int_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_a_int)
-    b_int_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_b_int)
+    a_int_str = "".join(value_to_char(d, base) for d in trace.aligned_a_int)
+    b_int_str = "".join(value_to_char(d, base) for d in trace.aligned_b_int)
 
     has_frac = len(trace.aligned_a_frac) > 0
-    a_frac_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_a_frac) if has_frac else ""
-    b_frac_str = "".join(alpha.value_to_char(d, base) for d in trace.aligned_b_frac) if has_frac else ""
+    a_frac_str = (
+        "".join(value_to_char(d, base) for d in trace.aligned_a_frac)
+        if has_frac
+        else ""
+    )
+    b_frac_str = (
+        "".join(value_to_char(d, base) for d in trace.aligned_b_frac)
+        if has_frac
+        else ""
+    )
 
     # Linha de empresta-um (borrows)
     borrows_int_syms = [
@@ -83,7 +97,9 @@ def format_subtraction_conta_armada(trace: SubtractionTrace) -> str:
     borrow_display = f"{borrow_int_str} {borrow_frac_str}" if has_frac else borrow_int_str
 
     res_display = trace.result.to_string()
-    width = max(len(op_a_display), len(op_b_display), len(res_display), len(borrow_display), 8)
+    width = max(
+        len(op_a_display), len(op_b_display), len(res_display), len(borrow_display), 8
+    )
 
     lines = [
         f"--- CONTA ARMADA (SUBTRAÇÃO NA BASE {base}) ---",
@@ -117,19 +133,24 @@ def format_conversion_report(res: ConversionResult) -> str:
         lines.append(f"  • {step}")
 
     lines.append("-" * 70)
-    lines.append(f"[FASE 2] Conversão da Parte Fracionária (Multiplicações na Base de Origem):")
+    lines.append(
+        f"[FASE 2] Conversão da Parte Fracionária (Multiplicações na Base de Origem):"
+    )
     for step in res.fractional_steps:
         lines.append(f"  • {step}")
 
     lines.append("-" * 70)
     lines.append("[FASE 3] Diagnóstico de Periodicidade Fracionária:")
     if res.is_periodic:
-        lines.append(f"  Status          : DÍZIMA PERIÓDICA NATIVA IDENTIFICADA!")
-        lines.append(f"  Início do ciclo : dígito {res.period_start + 1} após a vírgula")
+        lines.append(f"  Status          : DÍZIMA PERIÓDICA IDENTIFICADA!")
+        lines.append(
+            f"  Início do ciclo : dígito {res.period_start + 1} após a vírgula"
+        )
         lines.append(f"  Comprimento (T) : {res.period_length} dígitos")
         periodic_digits = res.result_number.fractional_digits[res.period_start :]
         p_str = "".join(
-            res.result_number.alphabet.value_to_char(d, res.target_base) for d in periodic_digits
+            value_to_char(d, res.target_base)
+            for d in periodic_digits
         )
         lines.append(f"  Padrão repetido : ({p_str})")
     elif not res.source_number.fractional_digits:

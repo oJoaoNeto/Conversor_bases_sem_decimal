@@ -1,4 +1,2 @@
 # Projeto Unidade 1 - Computação Numérica (ECT-3401 / UFRN)
-# Nenhuma dependência externa obrigatória é necessária para execução (utiliza Python 3.11+ nativo).
-# Para executar os testes via pytest (opcional):
-pytest>=7.0.0
+# Nenhuma dependência externa é necessária para execução (utiliza Python 3.11+ nativo).

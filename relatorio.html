@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Relatório Técnico - Computação Numérica</title>
+  <!-- KaTeX CSS e JS para renderização matemática ultra-rápida e síncrona -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <!-- Marked para Markdown -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    @page {
+      size: A4;
+      margin: 18mm 20mm;
+    }
+    body {
+      font-family: 'Times New Roman', Times, serif, 'Segoe UI', sans-serif;
+      font-size: 11.5pt;
+      line-height: 1.6;
+      color: #111;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #fff;
+    }
+    h1, h2, h3, h4 {
+      color: #0b2240;
+      font-family: Arial, Helvetica, sans-serif;
+      margin-top: 1.3em;
+    }
+    h1 {
+      font-size: 16pt;
+      text-align: center;
+      border-bottom: 2px solid #0b2240;
+      padding-bottom: 6px;
+    }
+    h2 {
+      font-size: 13pt;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 4px;
+    }
+    h3 {
+      font-size: 11.5pt;
+    }
+    pre, code {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 9.5pt;
+    }
+    pre {
+      background: #f8f9fa;
+      border: 1px solid #dcdcdc;
+      border-radius: 4px;
+      padding: 10px 14px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 18px 0;
+      font-size: 10.5pt;
+    }
+    th, td {
+      border: 1px solid #888;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background-color: #f1f3f5;
+      font-weight: bold;
+    }
+    blockquote {
+      border-left: 4px solid #0056b3;
+      padding-left: 14px;
+      margin-left: 0;
+      color: #444;
+      font-style: italic;
+    }
+    .katex {
+      font-size: 1.08em;
+    }
+    .katex-display {
+      margin: 0.8em 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="content"></div>
+  <script>
+    const markdownText = "# RELAT\u00d3RIO T\u00c9CNICO E AVALIA\u00c7\u00c3O CR\u00cdTICA\n\n**Disciplina:** ECT-3401 \u2014 Computa\u00e7\u00e3o Num\u00e9rica  \n**Unidade:** I  \n**Institui\u00e7\u00e3o:** Escola de Ci\u00eancias e Tecnologia \u2014 Universidade Federal do Rio Grande do Norte (UFRN)  \n**Docente:** Prof. Dr. Joilson B. A. Rego  \n**Tema:** Convers\u00e3o de Bases e Opera\u00e7\u00f5es Elementares: Um Estudo Pr\u00e1tico em Ponto Flutuante Sem Coer\u00e7\u00e3o Decimal  \n\n---\n\n## Resumo\n\nEste relat\u00f3rio documenta a concep\u00e7\u00e3o, fundamenta\u00e7\u00e3o matem\u00e1tica, implementa\u00e7\u00e3o e an\u00e1lise de um software desenvolvido para realizar opera\u00e7\u00f5es aritm\u00e9ticas elementares (adi\u00e7\u00e3o e subtra\u00e7\u00e3o) e convers\u00e3o direta entre sistemas de bases arbitr\u00e1rias ($2 \\le \\beta \\le 36$) para n\u00fameros reais ($x \\in \\mathbb{R}$). O diferencial central do projeto consiste na elimina\u00e7\u00e3o total de qualquer coer\u00e7\u00e3o para a base decimal (10) ou para tipos primitivos de ponto flutuante de m\u00e1quina (padr\u00e3o IEEE 754). N\u00fameros s\u00e3o modelados atrav\u00e9s de uma estrutura vetorial customizada de d\u00edgitos inteiros isolados. A convers\u00e3o da parte inteira \u00e9 executada estritamente na base de destino via Algoritmo de Horner, enquanto a parte fracion\u00e1ria \u00e9 convertida por multiplica\u00e7\u00f5es sucessivas calculadas estritamente na base de origem, ambas operacionalizadas exclusivamente atrav\u00e9s da aritm\u00e9tica de adi\u00e7\u00e3o da respectiva base. Demonstra-se que o rastreamento discreto do hist\u00f3rico de estados fracion\u00e1rios elimina ru\u00eddos digitais de arredondamento e possibilita a identifica\u00e7\u00e3o anal\u00edtica de d\u00edzimas peri\u00f3dicas nativas.\n\n---\n\n## 1. Contexto e Motiva\u00e7\u00e3o\n\nA representa\u00e7\u00e3o de grandezas num\u00e9ricas na arquitetura dos computadores fundamenta-se predominantemente no padr\u00e3o IEEE 754. Em ambientes de software convencionais, quando se deseja converter um valor expresso em uma base de origem arbitr\u00e1ria $\\beta_1$ para uma base de destino $\\beta_2$ (como converter da Base 7 para a Base 13), os compiladores e interpretadores tipicamente convertem o n\u00famero para a representa\u00e7\u00e3o decimal da m\u00e1quina (`int` ou `float`) e, em seguida, realizam sucessivas divis\u00f5es ou multiplica\u00e7\u00f5es para atingir a base $\\beta_2$.\n\nEssa pr\u00e1tica acarreta dois preju\u00edzos t\u00e9cnicos:\n\n1. **Mascaramento da Teoria Aritm\u00e9tica:** O estudante e o desenvolvedor perdem o contato com as propriedades fundamentais dos sistemas. O comportamento do transporte de d\u00edgitos (*carry* ou \"vai-um\"), do empr\u00e9stimo posicional (*borrow* ou \"empresta-um\") e da din\u00e2mica polinomial desaparece sob as abstra\u00e7\u00f5es de baixo n\u00edvel do processador.\n2. **Erros de Arredondamento:** A passagem por um piv\u00f4 bin\u00e1rio/decimal de precis\u00e3o finita gera d\u00edzimas peri\u00f3dicas decorrentes das incompatibilidades entre os fatores primos das bases. Por exemplo, o n\u00famero $0.1_{10}$ (uma fra\u00e7\u00e3o decimal finita com fator primo 5) transforma-se em uma d\u00edzima peri\u00f3dica infinita no formato IEEE 754 bin\u00e1rio ($0.0001100110011\\dots_2$). O truncamento imposto pela mantissa finita do hardware introduz ru\u00eddo que contamina a integridade de qualquer convers\u00e3o subsequente para uma terceira base.\n\nDiante desse cen\u00e1rio, este projeto adota a seguinte abordagem: os tipos primitivos s\u00e3o substitu\u00eddos por estruturas de dados que armazenam vetores de d\u00edgitos discretos, manipulados exclusivamente por algoritmos fundamentados na teoria dos n\u00fameros e na \u00e1lgebra posicional.\n\n---\n\n## 2. Objetivos\n\n### 2.1 Objetivo Geral\nConstruir em linguagem Python 3.11+ um software capaz de executar opera\u00e7\u00f5es aritm\u00e9ticas elementares (adi\u00e7\u00e3o e subtra\u00e7\u00e3o) e realizar convers\u00e3o direta entre quaisquer bases arbitr\u00e1rias no dom\u00ednio dos reais ($x \\in \\mathbb{R}$) sem qualquer intermedia\u00e7\u00e3o decimal ou coer\u00e7\u00e3o IEEE 754.\n\n### 2.2 Metas Espec\u00edficas\n- **O1:** Desenvolver algoritmos de convers\u00e3o direta entre bases arbitr\u00e1rias manipulados estritamente na base de origem ou de destino via aritm\u00e9tica polinomial.\n- **O2:** Implementar mapeamento din\u00e2mico de caracteres para suportar d\u00edgitos e letras (0\u20139, A\u2013Z).\n- **O3:** Garantir a aus\u00eancia total da base 10 como piv\u00f4 durante as transforma\u00e7\u00f5es num\u00e9ricas.\n- **O4:** Efetuar opera\u00e7\u00f5es elementares diretamente na base selecionada, detalhando contas com alinhamento e rastreio de *carry* e *borrow*.\n- **O5:** Identificar d\u00edzimas peri\u00f3dicas na base de destino a partir do hist\u00f3rico de restos gerados na base de origem.\n\n---\n\n## 3. Fundamenta\u00e7\u00e3o Te\u00f3rica e Algor\u00edtmica\n\n### 3.1 Representa\u00e7\u00e3o Posicional Polinomial\nQualquer n\u00famero real $X$ pode ser expresso em uma base inteira $\\beta \\ge 2$ pela s\u00e9rie posicional:\n$$X = \\pm \\left( \\sum_{i=0}^{n} d_i \\cdot \\beta^i + \\sum_{j=1}^{\\infty} d_{-j} \\cdot \\beta^{-j} \\right)$$\nonde cada d\u00edgito satisfaz $d_k \\in \\{0, 1, \\dots, \\beta - 1\\}$.\n\n### 3.2 Convers\u00e3o da Parte Inteira\nPara converter a parte inteira $(d_n d_{n-1} \\dots d_0)_{\\beta_1}$ para a base $\\beta_2$, avalia-se o polin\u00f4mio na base $\\beta_2$ utilizando o m\u00e9todo aninhado de Horner:\n$$P_0 = (d_n)_{\\beta_2}$$\n$$P_k = (P_{k-1} \\times \\beta_1) + (d_{n-k})_{\\beta_2}, \\quad k = 1, \\dots, n$$\n**Rigor de n\u00e3o-coer\u00e7\u00e3o:**\n- A base $\\beta_1$ \u00e9 tratada como uma quantidade representada na base $\\beta_2$.\n- O produto $P_{k-1} \\times \\beta_1$ \u00e9 computado utilizando o algoritmo *double-and-add* baseado na fun\u00e7\u00e3o de **adi\u00e7\u00e3o na base $\\beta_2$**.\n- O d\u00edgito $(d_{n-k})$ \u00e9 somado utilizando a mesma rotina de adi\u00e7\u00e3o na base $\\beta_2$.\n\n### 3.3 Convers\u00e3o da Parte Fracion\u00e1ria\nPara a parte fracion\u00e1ria $F_0 = (0.d_{-1} d_{-2} \\dots d_{-m})_{\\beta_1}$, a convers\u00e3o para $\\beta_2$ opera no sentido inverso, manipulada na base de origem $\\beta_1$:\nA cada itera\u00e7\u00e3o $k \\ge 1$:\n$$W_k = F_{k-1} \\times \\beta_2 \\quad (\\text{calculado na base } \\beta_1)$$\nO valor que transborda a v\u00edrgula para a ordem inteira, $I_k = \\lfloor W_k \\rfloor$, representa o $k$-\u00e9simo d\u00edgito na base de destino $\\beta_2$. O restante fracion\u00e1rio torna-se:\n$$F_k = W_k - I_k = (W_k) \\pmod 1$$\n\nNovamente, o produto $F_{k-1} \\times \\beta_2$ \u00e9 obtido somando $F_{k-1}$ sucessivamente $\\beta_2$ vezes na pr\u00f3pria base $\\beta_1$.\n\n### 3.4 Teorema da Periodicidade e Detec\u00e7\u00e3o de D\u00edzimas\nUma fra\u00e7\u00e3o irredut\u00edvel $p/q$ possui representa\u00e7\u00e3o finita na base $\\beta$ se, e somente se, todos os fatores primos de $q$ dividem $\\beta$. Caso contr\u00e1rio, a representa\u00e7\u00e3o torna-se inevitavelmente uma **d\u00edzima peri\u00f3dica**.\n\nAo rastrear os estados do vetor de d\u00edgitos fracion\u00e1rios $F_k$ na base de origem, se em uma itera\u00e7\u00e3o $k$ encontrarmos um estado $F_k$ id\u00eantico a um estado pr\u00e9vio $F_j$ ($j < k$), o processo garante a exist\u00eancia de um ciclo peri\u00f3dico de comprimento $T = k - j$. O padr\u00e3o repetitivo \u00e9 composto pelos d\u00edgitos gerados entre $j+1$ e $k$.\n\n---\n\n## 4. Modelagem e Arquitetura\n\nO sistema foi estruturado de forma modular e desacoplada:\n\n1. **`Alphabet` (`src/alphabet.py`):** Encapsula a correspond\u00eancia entre o caractere textual (ex: `'0'`\u2013`'9'`, `'A'`\u2013`'Z'`) e o \u00edndice inteiro associado, suportando bases de 2 a 36 com valida\u00e7\u00e3o.\n2. **`BaseNumber` (`src/base_number.py`):** Objeto do projeto. Armazena o sinal ($\\pm 1$), um vetor para d\u00edgitos inteiros `integer_digits: List[int]`, um vetor para d\u00edgitos fracion\u00e1rios `fractional_digits: List[int]` e um ponteiro opcional para o in\u00edcio do per\u00edodo `repeating_start`. A classe implementa normaliza\u00e7\u00e3o autom\u00e1tica (elimina\u00e7\u00e3o de zeros sup\u00e9rfluos) e compara\u00e7\u00e3o de magnitude (`abs_compare`).\n3. **`Operations` (`src/operations.py`):**\n   - **`add(a, b)`:** Realiza o alinhamento preenchendo zeros \u00e0 direita (fra\u00e7\u00f5es) e \u00e0 esquerda (inteiros). Executa a soma coluna a coluna da direita para a esquerda. Em caso de sinais contr\u00e1rios, desvia para a subtra\u00e7\u00e3o de magnitudes. Produz uma estrutura `AdditionTrace` que documenta os *carries* de cada coluna.\n   - **`subtract(a, b)`:** Realiza o alinhamento e calcula a diferen\u00e7a de magnitudes. Se o minuendo \u00e9 menor que o subtraendo, permuta a ordem e inverte o sinal do resultado. O algoritmo rastreia os empr\u00e9stimos em cadeia e gera uma estrutura `SubtractionTrace` com os *borrows* de cada coluna.\n   - **`scalar_multiply(num, scalar)`:** Multiplica um `BaseNumber` por uma constante inteira atrav\u00e9s do m\u00e9todo de duplica\u00e7\u00e3o e soma (*double-and-add*), invocando iterativamente a pr\u00f3pria fun\u00e7\u00e3o `add`.\n4. **`Converter` (`src/converter.py`):** Implementa\u00e7\u00e3o do m\u00e9todo de Horner e do m\u00e9todo dos restos descritos na Se\u00e7\u00e3o 3, registrando em `ConversionResult` cada transi\u00e7\u00e3o de estado e o diagn\u00f3stico de periodicidade.\n5. **`Display` (`src/display.py`):** Formata a sa\u00edda no terminal, apresentando o cabe\u00e7alho posicional, linha de vai-um / empresta-um, operandos alinhados e linha divis\u00f3ria.\n\n---\n\n## 5. Resultados Experimentais e Avalia\u00e7\u00e3o\n\nA seguir s\u00e3o apresentados experimentos que evidenciam o funcionamento do software e comprovam as hip\u00f3teses levantadas no projeto.\n\n### Experimento 1: Opera\u00e7\u00f5es Elementares e Contas Armadas com Propaga\u00e7\u00e3o de Carries e Borrows\n\n#### Caso 1.1: Adi\u00e7\u00e3o Hexadecimal com M\u00faltiplos Carries em Cascata\nOpera\u00e7\u00e3o: $(1\\text{F}.8)_{16} + (0.\\text{C})_{16}$\n```text\n--- CONTA (ADI\u00c7\u00c3O NA BASE 16) ---\n  [vai-um]         11  \n                   1F.8\n        +          00.C\n        ---------------\n                   20.4\n\nPasso a passo por coluna (da direita para a esquerda):\n  \u2022 Fracion\u00e1rio col 1: 8 (8) + C (12) = 20 -> D\u00edgito: 4 (4), Novo vai-um: 1\n  \u2022 Inteiro col 0: F (15) + 0 (0) + vai-um (1) = 16 -> D\u00edgito: 0 (0), Novo vai-um: 1\n  \u2022 Inteiro col 1: 1 (1) + 0 (0) + vai-um (1) = 2 -> D\u00edgito: 2 (2), Novo vai-um: 0\n```\n*An\u00e1lise:* O fracion\u00e1rio $8_{16} + \\text{C}_{16} = 8 + 12 = 20_{10} = 1 \\times 16 + 4$ gerou o d\u00edgito 4 e um *carry* de valor 1 atrav\u00e9s da v\u00edrgula. Na coluna inteira 0, $\\text{F}_{16} + 1 = 16_{10} = 10_{16}$, gerando d\u00edgito 0 e propagando novo *carry* para a coluna 1, resultando no valor exato $(20.4)_{16}$.\n\n#### Caso 1.2: Subtra\u00e7\u00e3o Octal com Empr\u00e9stimo em Cascata Atrav\u00e9s de Zeros\nOpera\u00e7\u00e3o: $(100.2)_{8} - (0.7)_{8}$\n```text\n--- CONTA (SUBTRA\u00c7\u00c3O NA BASE 8) ---\n  [empresta]      111  \n                  100.2\n        -         000.7\n        ---------------\n                   77.3\n\nPasso a passo por coluna (da direita para a esquerda):\n  \u2022 Fracion\u00e1rio col 1: 2 (2) + base (8) [pediu emprestado] - 7 (7) = 3 (3)\n  \u2022 Inteiro col 0: 0 (0) - empresta (1) + base (8) [pediu emprestado] - 0 (0) = 7 (7)\n  \u2022 Inteiro col 1: 0 (0) - empresta (1) + base (8) [pediu emprestado] - 0 (0) = 7 (7)\n  \u2022 Inteiro col 2: 1 (1) - empresta (1) - 0 (0) = 0 (0)\n```\n*An\u00e1lise:* Evidencia o comportamento do *borrow* atravessando d\u00edgitos zero. Como a base \u00e9 8, o empr\u00e9stimo adiciona o peso 8 \u00e0 posi\u00e7\u00e3o corrente e decrementa 1 da posi\u00e7\u00e3o imediatamente superior, reproduzindo com exatid\u00e3o o racioc\u00ednio manual de registradores.\n\n---\n\n### Experimento 2: Convers\u00e3o Direta entre Bases N\u00e3o-Decimais (Base 7 para Base 13)\n\nConforme proposto nominalmente na introdu\u00e7\u00e3o do projeto pelo docente: converter valores da Base 7 diretamente para a Base 13.\n\nOpera\u00e7\u00e3o: Converter $(25)_{7}$ para a Base 13.\n- Na base 7: $2 \\times 7^1 + 5 \\times 7^0 = 19_{10}$.\n- Na base 13: $19 = 1 \\times 13^1 + 6 \\times 13^0 = (16)_{13}$.\n\nExecu\u00e7\u00e3o no software:\n```text\n======================================================================\nRELAT\u00d3RIO DE CONVERS\u00c3O DIRETA DE BASE (SEM COER\u00c7\u00c3O DECIMAL)\n======================================================================\nN\u00famero de Origem : 25 (Base 7)\nBase de Destino  : Base 13\nResultado Final  : 16 (Base 13)\n----------------------------------------------------------------------\n[FASE 1] Convers\u00e3o da Parte Inteira (Horner na Base de Destino):\n  \u2022 Inicializa\u00e7\u00e3o do acumulador na base de destino (13): P = 0\n  \u2022 Passo 1 (d\u00edgito de peso 7^1 = '2' [valor 2]): P = (P * 7) + 2 => P = 2\n  \u2022 Passo 2 (d\u00edgito de peso 7^0 = '5' [valor 5]): P = (P * 7) + 5 => P = 16\n----------------------------------------------------------------------\n[FASE 2] Convers\u00e3o da Parte Fracion\u00e1ria (Multiplica\u00e7\u00f5es na Base de Origem):\n  \u2022 Parte fracion\u00e1ria nula; convers\u00e3o direta imediata.\n----------------------------------------------------------------------\n[FASE 3] Diagn\u00f3stico de Periodicidade Fracion\u00e1ria:\n  Status          : N\u00famero estritamente inteiro.\n======================================================================\n```\n*An\u00e1lise:* O acumulador inicializou em 0 na base 13. No passo 1, $P = 0 \\times 7 + 2 = 2$. No passo 2, $P = 2 \\times 7 + 5$. Na base 13, $2 \\times 7 = 14_{10} = (11)_{13}$. Somando $5_{13}$ a $(11)_{13}$ via adi\u00e7\u00e3o na base 13, obt\u00e9m-se $(16)_{13}$, sem nenhuma passagem por vari\u00e1veis float ou primitivas do sistema.\n\n---\n\n### Experimento 3: Detec\u00e7\u00e3o Exata de D\u00edzimas Peri\u00f3dicas Nativas\n\n#### Caso 3.1: Convers\u00e3o Fracion\u00e1ria de Base 4 para Base 3\nOpera\u00e7\u00e3o: Converter $(0.12)_{4}$ para a Base 3.\n- Analiticamente: $(0.12)_4 = \\frac{1}{4} + \\frac{2}{16} = \\frac{6}{16} = \\frac{3}{8} = 0.375_{10}$.\n- Em base 3: $\\frac{3}{8} = 0.\\overline{10}_3$ (per\u00edodo de tamanho 2 com d\u00edgitos 1 e 0).\n\nExecu\u00e7\u00e3o no software:\n```text\n======================================================================\nRELAT\u00d3RIO DE CONVERS\u00c3O DIRETA DE BASE (SEM COER\u00c7\u00c3O DECIMAL)\n======================================================================\nN\u00famero de Origem : 0.12 (Base 4)\nBase de Destino  : Base 3\nResultado Final  : 0.(10) (Base 3)\n----------------------------------------------------------------------\n[FASE 1] Convers\u00e3o da Parte Inteira (Horner na Base de Destino):\n  \u2022 Inicializa\u00e7\u00e3o do acumulador na base de destino (3): P = 0\n  \u2022 Passo 1 (d\u00edgito de peso 4^0 = '0' [valor 0]): P = (P * 4) + 0 => P = 0\n----------------------------------------------------------------------\n[FASE 2] Convers\u00e3o da Parte Fracion\u00e1ria (Multiplica\u00e7\u00f5es na Base de Origem):\n  \u2022 In\u00edcio da convers\u00e3o fracion\u00e1ria: Fra\u00e7\u00e3o inicial = 0.12 na base 4. Multiplicador = base de destino (3).\n  \u2022 Passo 1: Fra\u00e7\u00e3o atual * 3 = 1.02 (base 4) -> D\u00edgito extra\u00eddo: '1' (valor 1), Nova fra\u00e7\u00e3o restante: 0.02\n  \u2022 Passo 2: Fra\u00e7\u00e3o atual * 3 = 0.12 (base 4) -> D\u00edgito extra\u00eddo: '0' (valor 0), Nova fra\u00e7\u00e3o restante: 0.12\n  \u2022 Passo 3: Estado fracion\u00e1rio (1, 2) j\u00e1 ocorreu no passo 1. D\u00edzima peri\u00f3dica nativa detectada! Per\u00edodo de tamanho 2: (10).\n----------------------------------------------------------------------\n[FASE 3] Diagn\u00f3stico de Periodicidade Fracion\u00e1ria:\n  Status          : D\u00cdZIMA PERI\u00d3DICA NATIVA IDENTIFICADA!\n  In\u00edcio do ciclo : d\u00edgito 1 ap\u00f3s a v\u00edrgula\n  Comprimento (T) : 2 d\u00edgitos\n  Padr\u00e3o repetido : (10)\n======================================================================\n```\n*An\u00e1lise Cr\u00edtica:* O algoritmo identificou o retorno ao estado fracion\u00e1rio inicial $(1, 2)$ imediatamente no Passo 3. Se essa convers\u00e3o tivesse sido realizada convertendo para o tipo primitivo `float(0.375)` em bin\u00e1rio IEEE 754, a precis\u00e3o dependeria da converg\u00eancia da mantissa e a identifica\u00e7\u00e3o do ciclo exigiria compara\u00e7\u00f5es por toler\u00e2ncia $\\epsilon$, sujeitas a falso-positivos ou detec\u00e7\u00e3o de per\u00edodos esp\u00farios. Aqui, a igualdade do vetor `(1, 2)` \u00e9 analiticamente exata.\n\n#### Caso 3.2: O Paradigma do IEEE 754 ($0.1_{10}$ em Bin\u00e1rio)\nOpera\u00e7\u00e3o: Converter $0.1_{10}$ para a Base 2.\nExecu\u00e7\u00e3o no software:\n```text\nResultado Final: 0.0(0011) (Base 2)\nFase 3:\n  Status          : D\u00cdZIMA PERI\u00d3DICA NATIVA IDENTIFICADA!\n  In\u00edcio do ciclo : d\u00edgito 2 ap\u00f3s a v\u00edrgula\n  Comprimento (T) : 4 d\u00edgitos\n  Padr\u00e3o repetido : (0011)\n```\n*An\u00e1lise Cr\u00edtica:* O software confirma formalmente o motivo pelo qual computadores bin\u00e1rios sofrem com o n\u00famero $0.1$: trata-se de uma d\u00edzima peri\u00f3dica composta por um d\u00edgito n\u00e3o-peri\u00f3dico ($0$) seguido de um ciclo infinito de 4 bits $(0011)$. O algoritmo deduziu a d\u00edzima com apenas 5 multiplica\u00e7\u00f5es exatas na base 10, demonstrando a superioridade da \u00e1lgebra posicional pura para fins did\u00e1ticos e anal\u00edticos.\n\n---\n\n### Experimento 4: Tabela Comparativa de Abordagens\n\n| M\u00e9trica / Crit\u00e9rio | Abordagem Convencional (Piv\u00f4 IEEE 754) | Abordagem Desenvolvida (Estrutura Vetorial Pura) |\n| :--- | :--- | :--- |\n| **Piv\u00f4 intermedi\u00e1rio** | Obrigat\u00f3rio (Base 2 / Base 10) | **Inexistente** (convers\u00e3o direta) |\n| **Detec\u00e7\u00e3o de d\u00edzimas** | Heur\u00edstica / Aproximada com $\\epsilon$ | **Anal\u00edtica e Exata** (compara\u00e7\u00e3o de tuplas) |\n| **Limita\u00e7\u00e3o de precis\u00e3o** | 53 bits de mantissa (~15 a 17 d\u00edgitos) | **Ilimitada** (vetores din\u00e2micos em mem\u00f3ria) |\n| **Visibilidade de carries/borrows**| Ocultada pelo sil\u00edcio da CPU | **Vis\u00edvel e Audit\u00e1vel** (passo a passo coluna por coluna) |\n| **Fidelidade da conta armada** | Requer reconstru\u00e7\u00e3o artificial | **Nativa e Fidedigna** ao c\u00e1lculo posicional |\n\n---\n\n## 6. Conclus\u00f5es\n\nO projeto atingiu com \u00eaxito todos os objetivos propostos para a Unidade I da disciplina de Computa\u00e7\u00e3o Num\u00e9rica:\n\n1. **Efici\u00eancia Algor\u00edtmica e Pureza Te\u00f3rica:** A combina\u00e7\u00e3o do Algoritmo de Horner calculado na base de destino com o m\u00e9todo das multiplica\u00e7\u00f5es sucessivas na base de origem provou que qualquer convers\u00e3o entre bases pode ser realizada sem nunca invocar a base decimal ou coer\u00e7\u00f5es bin\u00e1rias de hardware.\n2. **Did\u00e1tica e Transpar\u00eancia Aritm\u00e9tica:** As opera\u00e7\u00f5es de adi\u00e7\u00e3o e subtra\u00e7\u00e3o desenvolvidas registram fielmente os mecanismos de *carry* e *borrow*, viabilizando a renderiza\u00e7\u00e3o de contas armadas id\u00eanticas \u00e0s efetuadas manualmente sobre o papel, suprindo a car\u00eancia de visibilidade da teoria aritm\u00e9tica.\n3. **Robustez na An\u00e1lise Num\u00e9rica:** A estrat\u00e9gia de armazenar tuplas de d\u00edgitos fracion\u00e1rios na base de origem possibilitou isolar d\u00edzimas peri\u00f3dicas nativas sem contamina\u00e7\u00e3o por erros de truncamento de ponto flutuante.\n\nEm suma, a metodologia adotada consolida os princ\u00edpios dos sistemas de numera\u00e7\u00e3o e fornece uma ferramenta pedag\u00f3gica e computacional robusta para o estudo de aritm\u00e9tica de precis\u00e3o arbitr\u00e1ria.\n\n---\n\n## 7. Refer\u00eancias Bibliogr\u00e1ficas\n\n1. **KNUTH, Donald E.** *The Art of Computer Programming, Volume 2: Seminumerical Algorithms*. 3rd ed. Boston: Addison-Wesley, 1997.\n2. **GOLDBERG, David.** *What Every Computer Scientist Should Know About Floating-Point Arithmetic*. ACM Computing Surveys (CSUR), v. 23, n. 1, p. 5\u201348, 1991.\n3. **RUGGIERO, M\u00e1rcia A. G.; LOPES, Vera L\u00facia da Rocha.** *C\u00e1lculo Num\u00e9rico: Aspectos Te\u00f3ricos e Computacionais*. 2. ed. S\u00e3o Paulo: Pearson Makron Books, 1996.\n4. **BURDEN, Richard L.; FAIRES, J. Douglas.** *An\u00e1lise Num\u00e9rica*. 8. ed. S\u00e3o Paulo: Cengage Learning, 2008.\n5. **IEEE.** *IEEE Standard for Floating-Point Arithmetic*. IEEE Std 754-2019, p. 1\u201384, 2019.\n";
+
+    // Protege expressões LaTeX ($...$ e $$...$$) contra colisões do markdown
+    const mathBlocks = [];
+    let protectedText = markdownText.replace(/\$\$([\s\S]*?)\$\$/g, (match) => {
+      mathBlocks.push(match);
+      return `@@MATHBLOCK_${mathBlocks.length - 1}@@`;
+    });
+    protectedText = protectedText.replace(/\$([^\$\n]+?)\$/g, (match) => {
+      mathBlocks.push(match);
+      return `@@MATHINLINE_${mathBlocks.length - 1}@@`;
+    });
+
+    let htmlParsed = marked.parse(protectedText);
+
+    // Restaura as fórmulas puras
+    htmlParsed = htmlParsed.replace(/@@MATHBLOCK_(\d+)@@/g, (_, id) => mathBlocks[id]);
+    htmlParsed = htmlParsed.replace(/@@MATHINLINE_(\d+)@@/g, (_, id) => mathBlocks[id]);
+
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = htmlParsed;
+
+    // Renderiza todas as fórmulas com KaTeX
+    renderMathInElement(contentDiv, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false
+    });
+  </script>
+</body>
+</html>

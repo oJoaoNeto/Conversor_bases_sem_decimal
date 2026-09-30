@@ -5,7 +5,8 @@ com rastreio completo de 'vai-um' (carry) e 'empresta-um' (borrow)
 para renderização de contas armadas fiéis.
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Tuple
+from src.alphabet import value_to_char
 from src.base_number import BaseNumber
 
 
@@ -94,7 +95,6 @@ def _raw_magnitude_add(
     Retorna (res_int, res_frac, carries_int, carries_frac, a_int, b_int, steps).
     """
     base = a.base
-    alphabet = a.alphabet
     a_int, b_int, a_frac, b_frac = _align_operands(a, b)
 
     carries_frac = [0] * len(a_frac)
@@ -112,13 +112,13 @@ def _raw_magnitude_add(
         carries_frac[i] = carry
 
         step_desc = (
-            f"Fracionário col {i+1}: {alphabet.value_to_char(da, base)} ({da}) + "
-            f"{alphabet.value_to_char(db, base)} ({db})"
+            f"Fracionário col {i + 1}: {value_to_char(da, base)} ({da}) + "
+            f"{value_to_char(db, base)} ({db})"
         )
         if carry > 0:
             step_desc += f" + vai-um ({carry})"
         step_desc += (
-            f" = {total} -> Dígito: {alphabet.value_to_char(new_digit, base)} ({new_digit}), "
+            f" = {total} -> Dígito: {value_to_char(new_digit, base)} ({new_digit}), "
             f"Novo vai-um: {new_carry}"
         )
         steps.append(step_desc)
@@ -139,13 +139,13 @@ def _raw_magnitude_add(
 
         col_pos = n_int - 1 - i
         step_desc = (
-            f"Inteiro col {col_pos}: {alphabet.value_to_char(da, base)} ({da}) + "
-            f"{alphabet.value_to_char(db, base)} ({db})"
+            f"Inteiro col {col_pos}: {value_to_char(da, base)} ({da}) + "
+            f"{value_to_char(db, base)} ({db})"
         )
         if carry > 0:
             step_desc += f" + vai-um ({carry})"
         step_desc += (
-            f" = {total} -> Dígito: {alphabet.value_to_char(new_digit, base)} ({new_digit}), "
+            f" = {total} -> Dígito: {value_to_char(new_digit, base)} ({new_digit}), "
             f"Novo vai-um: {new_carry}"
         )
         steps.append(step_desc)
@@ -157,7 +157,7 @@ def _raw_magnitude_add(
         res_int.insert(0, carry)
         final_carries_int.insert(0, carry)
         steps.append(
-            f"Carry final transbordado para a esquerda: {alphabet.value_to_char(carry, base)} ({carry})"
+            f"Carry final transbordado para a esquerda: {value_to_char(carry, base)} ({carry})"
         )
 
     return res_int, res_frac, final_carries_int, carries_frac, steps
@@ -171,7 +171,6 @@ def _raw_magnitude_subtract(
     Retorna (res_int, res_frac, borrows_int, borrows_frac, steps).
     """
     base = big.base
-    alphabet = big.alphabet
     b_int, s_int, b_frac, s_frac = _align_operands(big, small)
 
     borrows_frac = [0] * len(b_frac)
@@ -196,16 +195,14 @@ def _raw_magnitude_subtract(
         diff = effective_db - ds
         res_frac[i] = diff
 
-        step_desc = (
-            f"Fracionário col {i+1}: {alphabet.value_to_char(db, base)} ({db})"
-        )
+        step_desc = f"Fracionário col {i + 1}: {value_to_char(db, base)} ({db})"
         if current_borrow > 0:
             step_desc += f" - empresta ({current_borrow})"
         if new_borrow > 0:
             step_desc += f" + base ({base}) [pediu emprestado]"
         step_desc += (
-            f" - {alphabet.value_to_char(ds, base)} ({ds}) = "
-            f"{alphabet.value_to_char(diff, base)} ({diff})"
+            f" - {value_to_char(ds, base)} ({ds}) = "
+            f"{value_to_char(diff, base)} ({diff})"
         )
         steps.append(step_desc)
         borrow = new_borrow
@@ -232,16 +229,14 @@ def _raw_magnitude_subtract(
         res_int[i] = diff
 
         col_pos = n_int - 1 - i
-        step_desc = (
-            f"Inteiro col {col_pos}: {alphabet.value_to_char(db, base)} ({db})"
-        )
+        step_desc = f"Inteiro col {col_pos}: {value_to_char(db, base)} ({db})"
         if current_borrow > 0:
             step_desc += f" - empresta ({current_borrow})"
         if new_borrow > 0:
             step_desc += f" + base ({base}) [pediu emprestado]"
         step_desc += (
-            f" - {alphabet.value_to_char(ds, base)} ({ds}) = "
-            f"{alphabet.value_to_char(diff, base)} ({diff})"
+            f" - {value_to_char(ds, base)} ({ds}) = "
+            f"{value_to_char(diff, base)} ({diff})"
         )
         steps.append(step_desc)
         borrow = new_borrow
@@ -269,7 +264,6 @@ def add(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, AdditionTrace]:
             sign=a.sign,
             integer_digits=res_int,
             fractional_digits=res_frac,
-            alphabet=a.alphabet,
         )
         trace = AdditionTrace(
             operand_a=a,
@@ -289,7 +283,12 @@ def add(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, AdditionTrace]:
     cmp = a.abs_compare(b)
     if cmp == 0:
         # Resultado é exatamente 0
-        result = BaseNumber(base=base, sign=1, integer_digits=[0], fractional_digits=[], alphabet=a.alphabet)
+        result = BaseNumber(
+            base=base,
+            sign=1,
+            integer_digits=[0],
+            fractional_digits=[],
+        )
         trace = AdditionTrace(
             operand_a=a,
             operand_b=b,
@@ -305,13 +304,14 @@ def add(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, AdditionTrace]:
         return result, trace
     elif cmp > 0:
         # |a| > |b|: sinal é o de 'a'
-        res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(a, b)
+        res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(
+            a, b
+        )
         result = BaseNumber(
             base=base,
             sign=a.sign,
             integer_digits=res_int,
             fractional_digits=res_frac,
-            alphabet=a.alphabet,
         )
         trace = AdditionTrace(
             operand_a=a,
@@ -323,18 +323,20 @@ def add(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, AdditionTrace]:
             aligned_b_frac=b_frac,
             carries_int=borrows_int,
             carries_frac=borrows_frac,
-            steps=[f"Sinais opostos com |A| > |B|. Efetuada subtração |A| - |B|:"] + steps,
+            steps=[f"Sinais opostos com |A| > |B|. Efetuada subtração |A| - |B|:"]
+            + steps,
         )
         return result, trace
     else:
         # |a| < |b|: sinal é o de 'b'
-        res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(b, a)
+        res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(
+            b, a
+        )
         result = BaseNumber(
             base=base,
             sign=b.sign,
             integer_digits=res_int,
             fractional_digits=res_frac,
-            alphabet=a.alphabet,
         )
         trace = AdditionTrace(
             operand_a=a,
@@ -346,7 +348,8 @@ def add(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, AdditionTrace]:
             aligned_b_frac=b_frac,
             carries_int=borrows_int,
             carries_frac=borrows_frac,
-            steps=[f"Sinais opostos com |A| < |B|. Efetuada subtração |B| - |A|:"] + steps,
+            steps=[f"Sinais opostos com |A| < |B|. Efetuada subtração |B| - |A|:"]
+            + steps,
         )
         return result, trace
 
@@ -357,7 +360,9 @@ def subtract(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, SubtractionTrace
     Retorna o resultado como BaseNumber e a estrutura de rastreio para conta armada.
     """
     if a.base != b.base:
-        raise ValueError(f"As bases devem ser iguais para a subtração: {a.base} != {b.base}")
+        raise ValueError(
+            f"As bases devem ser iguais para a subtração: {a.base} != {b.base}"
+        )
 
     base = a.base
     a_int, b_int, a_frac, b_frac = _align_operands(a, b)
@@ -366,13 +371,14 @@ def subtract(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, SubtractionTrace
     if a.sign > 0 and b.sign > 0:
         cmp = a.abs_compare(b)
         if cmp >= 0:
-            res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(a, b)
+            res_int, res_frac, borrows_int, borrows_frac, steps = (
+                _raw_magnitude_subtract(a, b)
+            )
             result = BaseNumber(
                 base=base,
                 sign=1,
                 integer_digits=res_int,
                 fractional_digits=res_frac,
-                alphabet=a.alphabet,
             )
             trace = SubtractionTrace(
                 operand_a=a,
@@ -391,13 +397,14 @@ def subtract(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, SubtractionTrace
         else:
             # a < b => -(b - a)
             b_int_swp, a_int_swp, b_frac_swp, a_frac_swp = _align_operands(b, a)
-            res_int, res_frac, borrows_int, borrows_frac, steps = _raw_magnitude_subtract(b, a)
+            res_int, res_frac, borrows_int, borrows_frac, steps = (
+                _raw_magnitude_subtract(b, a)
+            )
             result = BaseNumber(
                 base=base,
                 sign=-1,
                 integer_digits=res_int,
                 fractional_digits=res_frac,
-                alphabet=a.alphabet,
             )
             trace = SubtractionTrace(
                 operand_a=a,
@@ -409,7 +416,10 @@ def subtract(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, SubtractionTrace
                 aligned_b_frac=a_frac_swp,
                 borrows_int=borrows_int,
                 borrows_frac=borrows_frac,
-                steps=["Como A < B, armou-se |B| - |A| e o resultado recebeu sinal negativo:"] + steps,
+                steps=[
+                    "Como A < B, armou-se |B| - |A| e o resultado recebeu sinal negativo:"
+                ]
+                + steps,
                 swapped_operands=True,
             )
             return result, trace
@@ -430,7 +440,8 @@ def subtract(a: BaseNumber, b: BaseNumber) -> Tuple[BaseNumber, SubtractionTrace
         aligned_b_frac=b_frac,
         borrows_int=add_trace.carries_int,
         borrows_frac=add_trace.carries_frac,
-        steps=[f"Aritmética com sinais: A - B calculado como A + (-B)."] + add_trace.steps,
+        steps=[f"Aritmética com sinais: A - B calculado como A + (-B)."]
+        + add_trace.steps,
     )
     return res_add, trace
 
@@ -444,12 +455,22 @@ def scalar_multiply(num: BaseNumber, scalar: int) -> BaseNumber:
     if scalar < 0:
         raise ValueError("Escalar deve ser não-negativo.")
     if scalar == 0 or num.is_zero():
-        return BaseNumber(base=num.base, sign=1, integer_digits=[0], fractional_digits=[], alphabet=num.alphabet)
+        return BaseNumber(
+            base=num.base,
+            sign=1,
+            integer_digits=[0],
+            fractional_digits=[],
+        )
     if scalar == 1:
         return num.copy()
 
     # Algoritmo de duplicação e soma (double-and-add) usando a própria função add
-    res = BaseNumber(base=num.base, sign=1, integer_digits=[0], fractional_digits=[], alphabet=num.alphabet)
+    res = BaseNumber(
+        base=num.base,
+        sign=1,
+        integer_digits=[0],
+        fractional_digits=[],
+    )
     current = num.copy()
     current.sign = 1  # magnitude
 
